@@ -6,6 +6,7 @@ module_name="etl_module"
 process_name="etl_edr_p3"
 sql_process_name="etl_edr_sql"
 log_level="INFO" # INFO, DEBUG, ERROR
+rule_engine="${APP_HOME}/rule_engine/RuleEngine-1.1.jar"
 
 startProcess(){
 oprName=$1
@@ -28,8 +29,8 @@ if [ -e ${process_name}.jar ]
         logpath=${LOG_HOME}/$module_name/$main_module/${process_name}/${oprName}/${counter}/
 
         inputfilepath=${DATA_HOME}/$module_name/$main_module/${process_name}_input/${oprName}/${counter}/process/
-
-        java -Dlog_path=${logpath} -Dlog_level=${log_level} -Dmodule_name=${process_name}_${counter}  -Dlog4j.configurationFile=./log4j2.xml  -Dspring.config.location=file:${commonConfigurationFilePath},file:./application.properties -jar ${process_name}.jar ${inputfilepath}
+                
+          java  -Dlog_level=${log_level} -Dlog_path=${log_path} -Dmodule_name=${process_name}_${counter} -Dlog4j.configurationFile=./log4j2.xml  -Dspring.config.location=file:${commonConfigurationFilePath},file:./application.properties  -Dloader.path=${rule_engine}  -cp ${process_name}.jar org.springframework.boot.loader.PropertiesLauncher ${inputfilepath} 1>/dev/null 2>${log_path}/${module_name}.error & 
        done
      sleep 5
 
