@@ -9,7 +9,7 @@ log_level="INFO" # INFO, DEBUG, ERROR
 ########### DO NOT CHANGE ANY CODE OR TEXT AFTER THIS LINE #########
 
 op_name=$1
-
+rule_engine="${APP_HOME}/utility/rule_engine/rule_engine.jar"
 build_path="${APP_HOME}/${main_module}_module/${module_name}"
 build="${module_name}.jar"
 
@@ -39,7 +39,7 @@ start_java_process()
 
     cd ${build_path}
 
-    java -Dlog.path=${log_path} -Dlog.level=${log_level} -Dmodule.name=${module_name}_${counter}  -Dlog4j.configurationFile=./log4j2.xml  -Dspring.config.location=file:./application.properties,file:${commonConfigurationFile} -jar ${build} ${op_name} ${counter} 1>/dev/null 2>${log_path}/${module_name}_${counter}.error  
+    java -Dlog.path=${log_path} -Dlog.level=${log_level} -Dmodule.name=${module_name}_${counter}  -Dlog4j.configurationFile=./log4j2.xml  -Dspring.config.location=file:./application.properties,file:${commonConfigurationFile}  -Dloader.path=${rule_engine} -cp $build org.springframework.boot.loader.PropertiesLauncher ${op_name} ${counter} 1>/dev/null 2>${log_path}/${module_name}_${counter}.error  
 
     echo "$(date) ${module_name} [${op_name}]: P3 java process for ${op_name} [${counter}] is completed !!! "
     echo "$(date) ${module_name} [${op_name}]: ==> calling next sql process for ${op_name} [${counter}]... "
@@ -68,12 +68,14 @@ done
 echo "$(date) ${module_name} [${op_name}]: waiting P3 java process & sql process for all ${op_name} instances to be completed... "
 
 
-status_final=`ps -ef | grep java | grep "$build ${op_name} ${counter}" | grep -v grep | wc -l`
+status_final=`ps -ef | grep ${main_module} | grep ${op_name} | grep -v grep | grep -v .sh | wc -l`
 
 while [ "$status_final" -gt 0 ]
 do
   sleep 15
-  status_final=`ps -ef | grep $build | grep java | grep ${op_name} | grep -v grep | wc -l`
+  status_final=`ps -ef | grep ${main_module} | grep ${op_name} | grep -v grep | grep -v .sh | wc -l`
+  echo "$(date) ${module_name} [${op_name}]: waiting P3 java process & sql process for all ${op_name} instances to be completed... "
+
 done
 
 wait $!
